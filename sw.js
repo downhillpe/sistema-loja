@@ -1,9 +1,9 @@
-const CACHE_NAME = 'filhao-v9';
+const CACHE_NAME = 'filhao-v10';
 const ASSETS = [
   './',
   './index.html',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
-  'https://cdn-icons-png.flaticon.com/512/3616/3616230.png'
+  './icon.png',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
 
 self.addEventListener('install', (e) => {
