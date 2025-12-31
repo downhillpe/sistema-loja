@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <style>
-        :root { --primary: #003399; --accent: #ffcc00; --success: #25d366; --bg: #f4f7fe; }
+        :root { --primary: #003399; --accent: #ffcc00; --success: #25d366; --bg: #f4f7fe; --danger: #ff4444; --warning: #ffbb33; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; }
         body { background: var(--bg); color: #333; padding-bottom: 90px; }
 
@@ -34,6 +34,20 @@
         .btn-success { background: var(--success); color: white; }
         .btn-sm { width: auto; padding: 5px 10px; font-size: 10px; margin: 0; }
 
+        /* Estilos do Kanban de O.S. */
+        .kanban-container { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; }
+        .kanban-col { min-width: 250px; background: #eef2f9; padding: 10px; border-radius: 10px; }
+        .k-title { font-size: 11px; font-weight: bold; margin-bottom: 10px; text-align: center; color: #555; }
+        .os-card { background: white; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #ccc; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .os-card.pecas { border-left-color: var(--warning); }
+        .os-card.pronta { border-left-color: var(--primary); }
+        .os-card.pgto { border-left-color: var(--success); }
+
+        .type-switch { display: flex; gap: 5px; margin-bottom: 10px; }
+        .type-btn { flex: 1; padding: 8px; border: 1px solid #ddd; background: #fff; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .type-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Fotos */
         .foto-circulo { width: 80px; height: 80px; background: #eee; border-radius: 50%; margin: 5px auto; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--primary); cursor: pointer; }
         .foto-circulo img { width: 100%; height: 100%; object-fit: cover; }
         .foto-quadrada { width: 100%; height: 120px; background: #eee; border-radius: 10px; margin-top: 5px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
@@ -58,50 +72,73 @@
     <div id="page-servicos" class="page active">
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center">
-                <h3><i class="fas fa-wrench"></i> ORDEM DE SERVIÇO</h3>
+                <h3><i class="fas fa-wrench"></i> NOVA O.S.</h3>
                 <button class="btn btn-primary btn-sm" onclick="nav('cadastros')">+ CLIENTE</button>
             </div>
-            <label>BUSCAR CLIENTE</label>
+            
+            <label>CLIENTE</label>
             <div class="search-box">
-                <input type="text" id="s-cli" placeholder="NOME..." onkeyup="buscar('clientes', this.value, 's-sug')">
+                <input type="text" id="s-cli" placeholder="BUSCAR..." onkeyup="buscar('clientes', this.value, 's-sug')">
                 <div id="s-sug" class="sugestoes"></div>
             </div>
-            <label>APARELHO E SENHA</label>
+            <label>APARELHO / SENHA</label>
             <div style="display:flex; gap:10px"><input type="text" id="s-apa" placeholder="MODELO"><input type="text" id="s-pw" placeholder="SENHA"></div>
-            <label>DEFEITO</label>
+            <label>DEFEITO RELATADO</label>
             <textarea id="s-def" rows="2"></textarea>
-            <label>FOTO DO APARELHO</label>
-            <div class="foto-quadrada" onclick="document.getElementById('f-apa').click()">
-                <img id="p-apa" style="display:none"><i class="fas fa-camera" id="i-apa"></i>
+            <label>VALOR PREVISTO R$</label>
+            <input type="number" id="s-valor" placeholder="0.00">
+            <button class="btn btn-primary" onclick="criarOS()">ABRIR ORDEM DE SERVIÇO</button>
+        </div>
+
+        <h3 style="margin: 10px 5px; color:#666">ANDAMENTO DE O.S.</h3>
+        <div class="kanban-container">
+            <div class="kanban-col">
+                <div class="k-title">AGUARD. PEÇAS/ANÁLISE</div>
+                <div id="col-pecas"></div>
             </div>
-            <input type="file" id="f-apa" hidden accept="image/*" onchange="read(this, 'p-apa', 'i-apa')">
-            <button class="btn btn-primary" onclick="registrar('S')">SALVAR O.S.</button>
-            <button class="btn btn-success" onclick="zap()"><i class="fab fa-whatsapp"></i> ENVIAR ZAP</button>
+            <div class="kanban-col">
+                <div class="k-title" style="color:var(--primary)">PRONTA</div>
+                <div id="col-pronta"></div>
+            </div>
+            <div class="kanban-col">
+                <div class="k-title" style="color:var(--success)">AGUARD. PAGAMENTO</div>
+                <div id="col-pgto"></div>
+            </div>
         </div>
     </div>
 
     <div id="page-vendas" class="page">
         <div class="card">
-            <h3><i class="fas fa-shopping-cart"></i> NOVA VENDA</h3>
+            <h3><i class="fas fa-shopping-cart"></i> CAIXA / VENDA RÁPIDA</h3>
+            
+            <label>TIPO DE VENDA</label>
+            <div class="type-switch">
+                <button id="btn-tipo-prod" class="type-btn active" onclick="setVendaTipo('produto')">PRODUTO</button>
+                <button id="btn-tipo-serv" class="type-btn" onclick="setVendaTipo('servico')">SERVIÇO</button>
+            </div>
+
             <label>CLIENTE</label>
             <div style="display:flex; gap:5px; align-items: flex-start;">
                 <div class="search-box" style="flex:1">
-                    <input type="text" id="v-cli" placeholder="BUSCAR..." onkeyup="buscar('clientes', this.value, 'v-sug-c')">
+                    <input type="text" id="v-cli" placeholder="BUSCAR CLIENTE..." onkeyup="buscar('clientes', this.value, 'v-sug-c')">
                     <div id="v-sug-c" class="sugestoes"></div>
                 </div>
                 <button class="btn btn-primary btn-sm" style="margin-top:4px; height:38px" onclick="nav('cadastros')"><i class="fas fa-plus"></i></button>
             </div>
-            <label>PRODUTO</label>
+
+            <label id="lbl-busca">BUSCAR PRODUTO</label>
             <div style="display:flex; gap:5px; align-items: flex-start;">
                 <div class="search-box" style="flex:1">
-                    <input type="text" id="v-prod" placeholder="BUSCAR..." onkeyup="buscar('produtos', this.value, 'v-sug-p')">
-                    <div id="v-sug-p" class="sugestoes"></div>
+                    <input type="text" id="v-item" placeholder="DIGITE O NOME..." onkeyup="buscarVenda(this.value)">
+                    <div id="v-sug-item" class="sugestoes"></div>
                 </div>
                 <button class="btn btn-primary btn-sm" style="margin-top:4px; height:38px" onclick="nav('cadastros')"><i class="fas fa-plus"></i></button>
             </div>
-            <label>VALOR R$</label>
-            <input type="number" id="v-val">
-            <button class="btn btn-success" onclick="registrar('V')">CONCLUIR VENDA</button>
+
+            <label>VALOR DE VENDA R$</label>
+            <input type="number" id="v-val" placeholder="0.00">
+            
+            <button class="btn btn-success" onclick="finalizarVenda()">CONCLUIR VENDA</button>
         </div>
     </div>
 
@@ -116,6 +153,7 @@
             <input type="text" id="c-tel" placeholder="WHATSAPP">
             <button class="btn btn-primary" onclick="salvar('cliente')">CADASTRAR CLIENTE</button>
         </div>
+        
         <div class="card">
             <h3>NOVO PRODUTO (RESTRITO ADM)</h3>
             <div class="foto-quadrada" onclick="document.getElementById('f-prod-cad').click()">
@@ -129,6 +167,13 @@
             </div>
             <button class="btn btn-primary" onclick="validarAdm(() => salvar('produto'))">SALVAR PRODUTO</button>
         </div>
+
+        <div class="card">
+            <h3>NOVO SERVIÇO (RESTRITO ADM)</h3>
+            <input type="text" id="serv-nome" placeholder="NOME DO SERVIÇO (EX: FORMATAÇÃO)">
+            <input type="number" id="serv-venda" placeholder="VALOR PADRÃO">
+            <button class="btn btn-primary" style="background:#666" onclick="validarAdm(() => salvar('servico'))">CADASTRAR SERVIÇO</button>
+        </div>
     </div>
 
     <div id="page-relatorio" class="page">
@@ -138,7 +183,8 @@
                     <option value="hoje">HOJE</option>
                     <option value="semana">SEMANA</option>
                     <option value="mes">MÊS</option>
-                    <option value="ano">ANO ATUAL</option> </select>
+                    <option value="ano">ANO ATUAL</option>
+                </select>
                 <button class="btn btn-primary btn-sm" onclick="validarAdm(liberarFinanceiro)">VER LUCRO</button>
             </div>
             <div id="hist-render" style="margin-top:10px; font-size:11px"></div>
@@ -156,9 +202,19 @@
 </nav>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('filhao_v7')) || { clientes: [], produtos: [], logs: [] };
+    // Inicialização do Banco de Dados
+    let db = JSON.parse(localStorage.getItem('filhao_v8')) || { 
+        clientes: [], 
+        produtos: [], 
+        servicosCadastrados: [], 
+        activeOS: [], 
+        logs: [] 
+    };
+    
     const SENHA_ADM = "000800";
+    let tipoVendaAtual = 'produto';
 
+    // Funções Gerais
     function validarAdm(callback) {
         const p = prompt("DIGITE A SENHA DO ADMINISTRADOR:");
         if(p === SENHA_ADM) { callback(); } else { alert("ACESSO NEGADO!"); }
@@ -187,10 +243,21 @@
         document.getElementById('page-'+p).classList.add('active');
         if(!b) b = document.querySelector(`.nav-item[onclick*="${p}"]`);
         if(b) b.classList.add('active');
+        if(p === 'servicos') renderKanban();
         if(p === 'relatorio') {
             document.getElementById('fin-adm').style.display = 'none';
             renderHist();
         }
+    }
+
+    // Lógica de Vendas
+    function setVendaTipo(tipo) {
+        tipoVendaAtual = tipo;
+        document.getElementById('btn-tipo-prod').className = tipo === 'produto' ? 'type-btn active' : 'type-btn';
+        document.getElementById('btn-tipo-serv').className = tipo === 'servico' ? 'type-btn active' : 'type-btn';
+        document.getElementById('lbl-busca').innerText = tipo === 'produto' ? 'BUSCAR PRODUTO' : 'BUSCAR SERVIÇO';
+        document.getElementById('v-item').value = '';
+        document.getElementById('v-val').value = '';
     }
 
     function buscar(tipo, termo, divId) {
@@ -200,37 +267,143 @@
         box.innerHTML = res.map(i => `<div onclick="set('${tipo}','${i.nome}','${divId}','${i.precoVenda||''}')">${i.nome}</div>`).join('');
     }
 
+    function buscarVenda(termo) {
+        const box = document.getElementById('v-sug-item');
+        if(termo.length < 2) { box.innerHTML = ""; return; }
+        
+        let lista = (tipoVendaAtual === 'produto') ? db.produtos : db.servicosCadastrados;
+        const res = lista.filter(i => i.nome.toLowerCase().includes(termo.toLowerCase()));
+        
+        box.innerHTML = res.map(i => `<div onclick="setItemVenda('${i.nome}', '${i.precoVenda}')">${i.nome}</div>`).join('');
+    }
+
+    function setItemVenda(nome, preco) {
+        document.getElementById('v-item').value = nome;
+        document.getElementById('v-val').value = preco;
+        document.getElementById('v-sug-item').innerHTML = "";
+    }
+
     function set(tipo, nome, divId, preco) {
         if(divId.includes('cli')) { document.getElementById(divId.includes('v') ? 'v-cli' : 's-cli').value = nome; }
-        if(divId.includes('p')) { document.getElementById('v-prod').value = nome; document.getElementById('v-val').value = preco; }
         document.getElementById(divId).innerHTML = "";
     }
 
+    // Salvar Cadastros
     function salvar(tipo) {
         if(tipo === 'cliente') {
             db.clientes.push({ nome: document.getElementById('c-nome').value, tel: document.getElementById('c-tel').value, foto: document.getElementById('p-cli').src });
         } else if(tipo === 'produto') {
             db.produtos.push({ nome: document.getElementById('p-nome').value, precoCompra: parseFloat(document.getElementById('p-custo').value||0), precoVenda: parseFloat(document.getElementById('p-venda').value||0), foto: document.getElementById('p-prod-cad').src });
+        } else if(tipo === 'servico') {
+            db.servicosCadastrados.push({ nome: document.getElementById('serv-nome').value, precoVenda: parseFloat(document.getElementById('serv-venda').value||0) });
         }
-        localStorage.setItem('filhao_v7', JSON.stringify(db));
+        localStorage.setItem('filhao_v8', JSON.stringify(db));
         alert("SALVO COM SUCESSO!");
         location.reload();
     }
 
-    function registrar(tipo) {
-        let item = { tipo: tipo === 'S' ? 'SERVIÇO' : 'VENDA', data: new Date().toISOString() };
-        if(tipo === 'S') {
-            item.cliente = document.getElementById('s-cli').value; item.desc = document.getElementById('s-apa').value; item.senha = document.getElementById('s-pw').value;
-        } else {
-            item.cliente = document.getElementById('v-cli').value; item.desc = document.getElementById('v-prod').value; item.valor = parseFloat(document.getElementById('v-val').value);
-            let pIdx = db.produtos.findIndex(p => p.nome === item.desc);
-            if(pIdx !== -1) { item.lucro = (item.valor || 0) - (db.produtos[pIdx].precoCompra || 0); }
+    // Gestão de O.S. (Kanban)
+    function criarOS() {
+        let os = {
+            id: Date.now(),
+            cliente: document.getElementById('s-cli').value,
+            modelo: document.getElementById('s-apa').value,
+            defeito: document.getElementById('s-def').value,
+            valor: parseFloat(document.getElementById('s-valor').value || 0),
+            status: 'pecas', // pecas, pronta, pgto
+            dataEntrada: new Date().toISOString()
+        };
+        if(!os.cliente) { alert("INFORME O CLIENTE!"); return; }
+        
+        db.activeOS.push(os);
+        localStorage.setItem('filhao_v8', JSON.stringify(db));
+        renderKanban();
+        alert("O.S. ABERTA!");
+        // Limpar campos
+        document.getElementById('s-apa').value = ""; document.getElementById('s-def').value = ""; document.getElementById('s-valor').value = "";
+    }
+
+    function moverOS(id, novoStatus) {
+        let idx = db.activeOS.findIndex(o => o.id === id);
+        if(idx !== -1) {
+            db.activeOS[idx].status = novoStatus;
+            localStorage.setItem('filhao_v8', JSON.stringify(db));
+            renderKanban();
         }
-        if(!item.cliente || !item.desc) { alert("PREENCHA OS CAMPOS!"); return; }
-        db.logs.push(item); 
-        localStorage.setItem('filhão_v8', JSON.stringify(db)); 
-        alert("CONCLUÍDO!");
-        if(tipo === 'V') location.reload();
+    }
+
+    function finalizarOS(id) {
+        let idx = db.activeOS.findIndex(o => o.id === id);
+        if(idx !== -1) {
+            let os = db.activeOS[idx];
+            // Move para o histórico financeiro
+            db.logs.push({
+                tipo: 'SERVIÇO',
+                cliente: os.cliente,
+                desc: os.modelo + " (" + os.defeito + ")",
+                valor: os.valor,
+                lucro: os.valor, // Serviço = 100% lucro (ou ajuste se quiser)
+                data: new Date().toISOString()
+            });
+            // Remove do Kanban
+            db.activeOS.splice(idx, 1);
+            localStorage.setItem('filhao_v8', JSON.stringify(db));
+            renderKanban();
+            alert("O.S. FINALIZADA E RECEBIDA!");
+        }
+    }
+
+    function renderKanban() {
+        const colPecas = document.getElementById('col-pecas');
+        const colPronta = document.getElementById('col-pronta');
+        const colPgto = document.getElementById('col-pgto');
+        
+        colPecas.innerHTML = ""; colPronta.innerHTML = ""; colPgto.innerHTML = "";
+
+        db.activeOS.forEach(os => {
+            let card = `
+                <div class="os-card ${os.status}">
+                    <b>${os.cliente}</b><br>
+                    ${os.modelo}<br>
+                    <span style="color:#777">R$ ${os.valor.toFixed(2)}</span><br>
+                    <div style="margin-top:5px; display:flex; gap:5px">
+                        ${os.status === 'pecas' ? `<button class="btn-sm btn-primary" onclick="moverOS(${os.id}, 'pronta')">PRONTA</button>` : ''}
+                        ${os.status === 'pronta' ? `<button class="btn-sm btn-success" onclick="moverOS(${os.id}, 'pgto')">PAGAR</button>` : ''}
+                        ${os.status === 'pgto' ? `<button class="btn-sm btn-success" onclick="finalizarOS(${os.id})">RECEBER</button>` : ''}
+                        <button class="btn-sm" style="background:#ddd" onclick="zapOS('${os.cliente}','${os.modelo}')"><i class="fab fa-whatsapp"></i></button>
+                    </div>
+                </div>
+            `;
+            if(os.status === 'pecas') colPecas.innerHTML += card;
+            else if(os.status === 'pronta') colPronta.innerHTML += card;
+            else if(os.status === 'pgto') colPgto.innerHTML += card;
+        });
+    }
+
+    function finalizarVenda() {
+        let item = { 
+            tipo: tipoVendaAtual === 'produto' ? 'VENDA' : 'SERVIÇO', 
+            data: new Date().toISOString(),
+            cliente: document.getElementById('v-cli').value,
+            desc: document.getElementById('v-item').value,
+            valor: parseFloat(document.getElementById('v-val').value)
+        };
+        
+        if(!item.desc || !item.valor) { alert("PREENCHA OS DADOS!"); return; }
+
+        // Calcula Lucro
+        if(tipoVendaAtual === 'produto') {
+            let pIdx = db.produtos.findIndex(p => p.nome === item.desc);
+            if(pIdx !== -1) { item.lucro = item.valor - (db.produtos[pIdx].precoCompra || 0); }
+            else { item.lucro = item.valor; } // Se não achou produto, lucro total
+        } else {
+            item.lucro = item.valor; // Serviço Venda Rápida
+        }
+
+        db.logs.push(item);
+        localStorage.setItem('filhao_v8', JSON.stringify(db));
+        alert("VENDA CONCLUÍDA!");
+        location.reload();
     }
 
     function renderHist() {
@@ -245,7 +418,7 @@
                 return d >= start;
             }
             if(f === 'mes') return d.getMonth() === h.getMonth();
-            if(f === 'ano') return d.getFullYear() === h.getFullYear(); // LÓGICA DO ANO
+            if(f === 'ano') return d.getFullYear() === h.getFullYear();
             return true;
         });
         
@@ -264,9 +437,16 @@
         window.open(`https://wa.me/5581999999999?text=${encodeURIComponent(msg)}`);
     }
 
+    function zapOS(cli, mod) {
+        window.open(`https://wa.me/5581999999999?text=Olá ${cli}, atualização sobre seu aparelho ${mod}.`);
+    }
+
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(e => {}); });
     }
+    
+    // Inicia Kanban ao carregar
+    renderKanban();
 </script>
 </body>
 </html>
