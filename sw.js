@@ -1,4 +1,4 @@
-const CACHE_NAME = 'filhao-v11';
+const CACHE_NAME = 'filhao-v12';
 const ASSETS = [
   './',
   './index.html',
