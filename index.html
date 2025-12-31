@@ -34,11 +34,9 @@
         .btn-sm { width: auto; padding: 5px 10px; font-size: 10px; margin: 0; }
         .btn-del { background: #ff4444; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        /* LISTA GERENCIAMENTO */
         .item-lista { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
         .item-info { flex: 1; margin-left: 10px; font-size: 11px; }
 
-        /* KANBAN */
         .kanban-container { display: flex; gap: 4px; padding-bottom: 10px; }
         .kanban-col { flex: 1; background: #eef2f9; padding: 4px; border-radius: 6px; min-width: 0; }
         .k-title { font-size: 9px; font-weight: bold; margin-bottom: 5px; text-align: center; color: #555; white-space: nowrap; overflow: hidden; }
@@ -48,7 +46,6 @@
         .os-card.pgto { border-left-color: #ffcc00; }
         .os-card.retirado { border-left-color: #25d366; }
 
-        /* LOADING */
         #loading { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--primary); }
 
         .foto-circulo { width: 80px; height: 80px; background: #eee; border-radius: 50%; margin: 5px auto; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--primary); cursor: pointer; }
@@ -70,7 +67,9 @@
 
 <div id="loading"><i class="fas fa-spinner fa-spin"></i> CONECTANDO...</div>
 
-<header><h2>FILHAO.CELL</h2></header>
+<header>
+    <h2>FILHAO.CELL <span style="font-size:10px; opacity:0.6; font-weight:normal; vertical-align:middle">v13.0</span></h2>
+</header>
 
 <div class="container">
 
@@ -237,12 +236,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Variáveis Globais (Cache Local Sincronizado)
     window.dbLocal = { clientes: [], produtos: [], servicosCadastrados: [], activeOS: [], logs: [] };
     const SENHA_ADM = "000800";
     window.tipoVendaAtual = 'produto';
 
-    // OUVINTES EM TEMPO REAL (Isso faz a mágica da sincronização)
     const load = document.getElementById('loading');
 
     onSnapshot(collection(db, "clientes"), (snap) => {
@@ -264,7 +261,7 @@
     onSnapshot(qOS, (snap) => {
         window.dbLocal.activeOS = snap.docs.map(d => ({id: d.id, ...d.data()}));
         window.renderKanban();
-        load.style.display = 'none'; // Some o loading quando carregar a primeira vez
+        load.style.display = 'none';
     });
 
     const qLogs = query(collection(db, "logs"), orderBy("data", "desc"));
@@ -273,7 +270,6 @@
         if(document.getElementById('page-relatorio').classList.contains('active')) window.renderHist();
     });
 
-    // --- FUNÇÕES GLOBAIS EXPOSTAS ---
     window.nav = function(p, b) {
         if(p === 'relatorio') {
             const pass = prompt("DIGITE A SENHA DO ADMINISTRADOR:");
@@ -292,7 +288,6 @@
         }
     }
 
-    // COMPRESSOR DE IMAGEM (Para o Firebase não travar)
     window.resizeAndRead = function(input, imgId, iconId) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
@@ -303,12 +298,12 @@
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const maxWidth = 300; // Reduz para 300px
+                    const maxWidth = 300;
                     const scaleSize = maxWidth / img.width;
                     canvas.width = maxWidth;
                     canvas.height = img.height * scaleSize;
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7); // Comprime qualidade
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
                     document.getElementById(imgId).src = dataUrl;
                     document.getElementById(imgId).style.display = 'block';
                     document.getElementById(iconId).style.display = 'none';
@@ -318,7 +313,6 @@
         }
     }
 
-    // CADASTROS NA NUVEM
     window.salvar = async function(tipo) {
         try {
             if(tipo === 'cliente') {
@@ -349,7 +343,6 @@
         } catch(e) { console.error(e); alert("ERRO AO SALVAR"); }
     }
 
-    // LISTAR E EXCLUIR
     window.listar = function(tipo) {
         const div = document.getElementById('lista-bd');
         div.innerHTML = "<div style='text-align:center'><i class='fas fa-spinner fa-spin'></i></div>";
@@ -379,10 +372,8 @@
     window.excluir = async function(col, id) {
         if(!confirm("APAGAR PARA SEMPRE?")) return;
         await deleteDoc(doc(db, col, id));
-        // A lista atualiza sozinha via onSnapshot
     }
 
-    // BUSCA
     window.buscar = function(tipo, termo, divId) {
         const box = document.getElementById(divId);
         if(termo.length < 2) { box.innerHTML = ""; return; }
@@ -415,7 +406,6 @@
         window.tipoVendaAtual = tipo;
     }
 
-    // O.S. (KANBAN)
     window.criarOS = async function() {
         let os = {
             cliente: document.getElementById('s-cli').value,
@@ -476,7 +466,6 @@
         });
     }
 
-    // VENDAS
     window.finalizarVenda = async function() {
         let item = { 
             tipo: window.tipoVendaAtual === 'produto' ? 'VENDA' : 'SERVIÇO', 
@@ -498,7 +487,6 @@
         location.reload();
     }
 
-    // RELATÓRIOS
     window.renderHist = function() {
         const f = document.getElementById('f-data').value;
         const r = document.getElementById('hist-render');
@@ -518,8 +506,7 @@
     }
 
     window.zapOS = function(cli, mod) { window.open(`https://wa.me/5581999999999?text=Olá ${cli}, atualização sobre seu aparelho ${mod}.`); }
-
-    // Service Worker
+    
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(e => {}); }); }
 
 </script>
