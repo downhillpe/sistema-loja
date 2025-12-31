@@ -13,12 +13,12 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <style>
-        :root { --primary: #003399; --accent: #ffcc00; --success: #25d366; --bg: #f4f7fe; --danger: #ff4444; --warning: #ffbb33; }
+        :root { --primary: #003399; --accent: #ffcc00; --success: #25d366; --bg: #f4f7fe; --warning: #ffbb33; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; }
         body { background: var(--bg); color: #333; padding-bottom: 90px; }
 
         header { background: var(--primary); color: white; padding: 15px; text-align: center; border-bottom: 5px solid var(--accent); }
-        .container { padding: 10px; max-width: 600px; margin: auto; }
+        .container { padding: 5px; max-width: 600px; margin: auto; }
 
         .page { display: none; }
         .page.active { display: block; }
@@ -34,20 +34,16 @@
         .btn-success { background: var(--success); color: white; }
         .btn-sm { width: auto; padding: 5px 10px; font-size: 10px; margin: 0; }
 
-        /* Estilos do Kanban de O.S. */
-        .kanban-container { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; }
-        .kanban-col { min-width: 250px; background: #eef2f9; padding: 10px; border-radius: 10px; }
-        .k-title { font-size: 11px; font-weight: bold; margin-bottom: 10px; text-align: center; color: #555; }
-        .os-card { background: white; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #ccc; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .os-card.pecas { border-left-color: var(--warning); }
-        .os-card.pronta { border-left-color: var(--primary); }
-        .os-card.pgto { border-left-color: var(--success); }
+        /* KANBAN */
+        .kanban-container { display: flex; gap: 4px; padding-bottom: 10px; }
+        .kanban-col { flex: 1; background: #eef2f9; padding: 4px; border-radius: 6px; min-width: 0; }
+        .k-title { font-size: 9px; font-weight: bold; margin-bottom: 5px; text-align: center; color: #555; white-space: nowrap; overflow: hidden; }
+        .os-card { background: white; padding: 6px; border-radius: 4px; margin-bottom: 5px; border-left: 3px solid #ccc; font-size: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .os-card b { display: block; margin-bottom: 2px; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .os-card.pecas { border-left-color: #003399; }
+        .os-card.pgto { border-left-color: #ffcc00; }
+        .os-card.retirado { border-left-color: #25d366; }
 
-        .type-switch { display: flex; gap: 5px; margin-bottom: 10px; }
-        .type-btn { flex: 1; padding: 8px; border: 1px solid #ddd; background: #fff; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .type-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        /* Fotos */
         .foto-circulo { width: 80px; height: 80px; background: #eee; border-radius: 50%; margin: 5px auto; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--primary); cursor: pointer; }
         .foto-circulo img { width: 100%; height: 100%; object-fit: cover; }
         .foto-quadrada { width: 100%; height: 120px; background: #eee; border-radius: 10px; margin-top: 5px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
@@ -65,7 +61,7 @@
 </head>
 <body>
 
-<header><h2>FILHÃO.CELL</h2></header>
+<header><h2>FILHAO.CELL</h2></header>
 
 <div class="container">
 
@@ -75,7 +71,6 @@
                 <h3><i class="fas fa-wrench"></i> NOVA O.S.</h3>
                 <button class="btn btn-primary btn-sm" onclick="nav('cadastros')">+ CLIENTE</button>
             </div>
-            
             <label>CLIENTE</label>
             <div class="search-box">
                 <input type="text" id="s-cli" placeholder="BUSCAR..." onkeyup="buscar('clientes', this.value, 's-sug')">
@@ -83,60 +78,67 @@
             </div>
             <label>APARELHO / SENHA</label>
             <div style="display:flex; gap:10px"><input type="text" id="s-apa" placeholder="MODELO"><input type="text" id="s-pw" placeholder="SENHA"></div>
-            <label>DEFEITO RELATADO</label>
+            <label>DEFEITO</label>
             <textarea id="s-def" rows="2"></textarea>
             <label>VALOR PREVISTO R$</label>
             <input type="number" id="s-valor" placeholder="0.00">
-            <button class="btn btn-primary" onclick="criarOS()">ABRIR ORDEM DE SERVIÇO</button>
+            <button class="btn btn-primary" onclick="criarOS()">ABRIR O.S.</button>
         </div>
 
-        <h3 style="margin: 10px 5px; color:#666">ANDAMENTO DE O.S.</h3>
+        <h3 style="margin: 5px; color:#666; font-size:12px">ANDAMENTO DE O.S.</h3>
         <div class="kanban-container">
             <div class="kanban-col">
-                <div class="k-title">AGUARD. PEÇAS/ANÁLISE</div>
+                <div class="k-title" style="color:#003399">ANÁLISE</div>
                 <div id="col-pecas"></div>
             </div>
             <div class="kanban-col">
-                <div class="k-title" style="color:var(--primary)">PRONTA</div>
-                <div id="col-pronta"></div>
+                <div class="k-title" style="color:#e6b800">AGUARD. PGTO</div>
+                <div id="col-pgto"></div>
             </div>
             <div class="kanban-col">
-                <div class="k-title" style="color:var(--success)">AGUARD. PAGAMENTO</div>
-                <div id="col-pgto"></div>
+                <div class="k-title" style="color:#009933">RETIRADO</div>
+                <div id="col-retirado"></div>
             </div>
         </div>
     </div>
 
     <div id="page-vendas" class="page">
         <div class="card">
-            <h3><i class="fas fa-shopping-cart"></i> CAIXA / VENDA RÁPIDA</h3>
+            <h3><i class="fas fa-shopping-cart"></i> CAIXA</h3>
             
-            <label>TIPO DE VENDA</label>
-            <div class="type-switch">
-                <button id="btn-tipo-prod" class="type-btn active" onclick="setVendaTipo('produto')">PRODUTO</button>
-                <button id="btn-tipo-serv" class="type-btn" onclick="setVendaTipo('servico')">SERVIÇO</button>
-            </div>
-
             <label>CLIENTE</label>
             <div style="display:flex; gap:5px; align-items: flex-start;">
                 <div class="search-box" style="flex:1">
-                    <input type="text" id="v-cli" placeholder="BUSCAR CLIENTE..." onkeyup="buscar('clientes', this.value, 'v-sug-c')">
+                    <input type="text" id="v-cli" placeholder="BUSCAR..." onkeyup="buscar('clientes', this.value, 'v-sug-c')">
                     <div id="v-sug-c" class="sugestoes"></div>
                 </div>
                 <button class="btn btn-primary btn-sm" style="margin-top:4px; height:38px" onclick="nav('cadastros')"><i class="fas fa-plus"></i></button>
             </div>
 
-            <label id="lbl-busca">BUSCAR PRODUTO</label>
+            <label style="margin-top:15px; color:var(--primary)">BUSCAR PRODUTO</label>
             <div style="display:flex; gap:5px; align-items: flex-start;">
                 <div class="search-box" style="flex:1">
-                    <input type="text" id="v-item" placeholder="DIGITE O NOME..." onkeyup="buscarVenda(this.value)">
-                    <div id="v-sug-item" class="sugestoes"></div>
+                    <input type="text" id="v-busca-prod" placeholder="DIGITE O PRODUTO..." onkeyup="buscarVenda('produto', this.value)">
+                    <div id="v-sug-prod" class="sugestoes"></div>
                 </div>
                 <button class="btn btn-primary btn-sm" style="margin-top:4px; height:38px" onclick="nav('cadastros')"><i class="fas fa-plus"></i></button>
             </div>
 
-            <label>VALOR DE VENDA R$</label>
-            <input type="number" id="v-val" placeholder="0.00">
+            <label style="margin-top:15px; color:#666">BUSCAR SERVIÇO</label>
+            <div style="display:flex; gap:5px; align-items: flex-start;">
+                <div class="search-box" style="flex:1">
+                    <input type="text" id="v-busca-serv" placeholder="DIGITE O SERVIÇO..." onkeyup="buscarVenda('servico', this.value)">
+                    <div id="v-sug-serv" class="sugestoes"></div>
+                </div>
+                <button class="btn btn-primary btn-sm" style="margin-top:4px; height:38px" style="background:#666" onclick="nav('cadastros')"><i class="fas fa-plus"></i></button>
+            </div>
+
+            <hr style="margin:15px 0; border-top:1px dashed #ccc">
+            <label>ITEM SELECIONADO</label>
+            <input type="text" id="v-desc" placeholder="..." readonly style="background:#eee; font-weight:bold">
+            
+            <label>VALOR R$</label>
+            <input type="number" id="v-val">
             
             <button class="btn btn-success" onclick="finalizarVenda()">CONCLUIR VENDA</button>
         </div>
@@ -155,7 +157,7 @@
         </div>
         
         <div class="card">
-            <h3>NOVO PRODUTO (RESTRITO ADM)</h3>
+            <h3>NOVO PRODUTO</h3>
             <div class="foto-quadrada" onclick="document.getElementById('f-prod-cad').click()">
                 <img id="p-prod-cad" style="display:none"><i class="fas fa-box" id="i-prod-cad"></i>
             </div>
@@ -165,14 +167,14 @@
                 <input type="number" id="p-custo" placeholder="CUSTO">
                 <input type="number" id="p-venda" placeholder="VENDA">
             </div>
-            <button class="btn btn-primary" onclick="validarAdm(() => salvar('produto'))">SALVAR PRODUTO</button>
+            <button class="btn btn-primary" onclick="salvar('produto')">SALVAR PRODUTO</button>
         </div>
 
         <div class="card">
-            <h3>NOVO SERVIÇO (RESTRITO ADM)</h3>
-            <input type="text" id="serv-nome" placeholder="NOME DO SERVIÇO (EX: FORMATAÇÃO)">
+            <h3>NOVO SERVIÇO</h3>
+            <input type="text" id="serv-nome" placeholder="NOME (EX: FORMATAÇÃO)">
             <input type="number" id="serv-venda" placeholder="VALOR PADRÃO">
-            <button class="btn btn-primary" style="background:#666" onclick="validarAdm(() => salvar('servico'))">CADASTRAR SERVIÇO</button>
+            <button class="btn btn-primary" style="background:#666" onclick="salvar('servico')">CADASTRAR SERVIÇO</button>
         </div>
     </div>
 
@@ -202,19 +204,10 @@
 </nav>
 
 <script>
-    // Inicialização do Banco de Dados
-    let db = JSON.parse(localStorage.getItem('filhao_v8')) || { 
-        clientes: [], 
-        produtos: [], 
-        servicosCadastrados: [], 
-        activeOS: [], 
-        logs: [] 
-    };
-    
+    let db = JSON.parse(localStorage.getItem('filhao_v8')) || { clientes: [], produtos: [], servicosCadastrados: [], activeOS: [], logs: [] };
     const SENHA_ADM = "000800";
     let tipoVendaAtual = 'produto';
 
-    // Funções Gerais
     function validarAdm(callback) {
         const p = prompt("DIGITE A SENHA DO ADMINISTRADOR:");
         if(p === SENHA_ADM) { callback(); } else { alert("ACESSO NEGADO!"); }
@@ -250,16 +243,6 @@
         }
     }
 
-    // Lógica de Vendas
-    function setVendaTipo(tipo) {
-        tipoVendaAtual = tipo;
-        document.getElementById('btn-tipo-prod').className = tipo === 'produto' ? 'type-btn active' : 'type-btn';
-        document.getElementById('btn-tipo-serv').className = tipo === 'servico' ? 'type-btn active' : 'type-btn';
-        document.getElementById('lbl-busca').innerText = tipo === 'produto' ? 'BUSCAR PRODUTO' : 'BUSCAR SERVIÇO';
-        document.getElementById('v-item').value = '';
-        document.getElementById('v-val').value = '';
-    }
-
     function buscar(tipo, termo, divId) {
         const box = document.getElementById(divId);
         if(termo.length < 2) { box.innerHTML = ""; return; }
@@ -267,20 +250,28 @@
         box.innerHTML = res.map(i => `<div onclick="set('${tipo}','${i.nome}','${divId}','${i.precoVenda||''}')">${i.nome}</div>`).join('');
     }
 
-    function buscarVenda(termo) {
-        const box = document.getElementById('v-sug-item');
+    function buscarVenda(tipo, termo) {
+        const divId = tipo === 'produto' ? 'v-sug-prod' : 'v-sug-serv';
+        const box = document.getElementById(divId);
         if(termo.length < 2) { box.innerHTML = ""; return; }
         
-        let lista = (tipoVendaAtual === 'produto') ? db.produtos : db.servicosCadastrados;
+        let lista = (tipo === 'produto') ? db.produtos : db.servicosCadastrados;
         const res = lista.filter(i => i.nome.toLowerCase().includes(termo.toLowerCase()));
         
-        box.innerHTML = res.map(i => `<div onclick="setItemVenda('${i.nome}', '${i.precoVenda}')">${i.nome}</div>`).join('');
+        box.innerHTML = res.map(i => `<div onclick="selecionarItemVenda('${tipo}', '${i.nome}', '${i.precoVenda}')">${i.nome}</div>`).join('');
     }
 
-    function setItemVenda(nome, preco) {
-        document.getElementById('v-item').value = nome;
+    function selecionarItemVenda(tipo, nome, preco) {
+        // Limpa a busca do outro tipo para evitar confusão
+        if(tipo === 'produto') document.getElementById('v-busca-serv').value = '';
+        else document.getElementById('v-busca-prod').value = '';
+
+        document.getElementById('v-sug-prod').innerHTML = '';
+        document.getElementById('v-sug-serv').innerHTML = '';
+        
+        document.getElementById('v-desc').value = nome;
         document.getElementById('v-val').value = preco;
-        document.getElementById('v-sug-item').innerHTML = "";
+        tipoVendaAtual = tipo;
     }
 
     function set(tipo, nome, divId, preco) {
@@ -288,7 +279,6 @@
         document.getElementById(divId).innerHTML = "";
     }
 
-    // Salvar Cadastros
     function salvar(tipo) {
         if(tipo === 'cliente') {
             db.clientes.push({ nome: document.getElementById('c-nome').value, tel: document.getElementById('c-tel').value, foto: document.getElementById('p-cli').src });
@@ -302,7 +292,6 @@
         location.reload();
     }
 
-    // Gestão de O.S. (Kanban)
     function criarOS() {
         let os = {
             id: Date.now(),
@@ -310,16 +299,14 @@
             modelo: document.getElementById('s-apa').value,
             defeito: document.getElementById('s-def').value,
             valor: parseFloat(document.getElementById('s-valor').value || 0),
-            status: 'pecas', // pecas, pronta, pgto
+            status: 'pecas',
             dataEntrada: new Date().toISOString()
         };
         if(!os.cliente) { alert("INFORME O CLIENTE!"); return; }
-        
         db.activeOS.push(os);
         localStorage.setItem('filhao_v8', JSON.stringify(db));
         renderKanban();
         alert("O.S. ABERTA!");
-        // Limpar campos
         document.getElementById('s-apa').value = ""; document.getElementById('s-def').value = ""; document.getElementById('s-valor').value = "";
     }
 
@@ -336,47 +323,45 @@
         let idx = db.activeOS.findIndex(o => o.id === id);
         if(idx !== -1) {
             let os = db.activeOS[idx];
-            // Move para o histórico financeiro
             db.logs.push({
                 tipo: 'SERVIÇO',
                 cliente: os.cliente,
                 desc: os.modelo + " (" + os.defeito + ")",
                 valor: os.valor,
-                lucro: os.valor, // Serviço = 100% lucro (ou ajuste se quiser)
+                lucro: os.valor,
                 data: new Date().toISOString()
             });
-            // Remove do Kanban
             db.activeOS.splice(idx, 1);
             localStorage.setItem('filhao_v8', JSON.stringify(db));
             renderKanban();
-            alert("O.S. FINALIZADA E RECEBIDA!");
+            alert("O.S. FINALIZADA E ARQUIVADA!");
         }
     }
 
     function renderKanban() {
         const colPecas = document.getElementById('col-pecas');
-        const colPronta = document.getElementById('col-pronta');
         const colPgto = document.getElementById('col-pgto');
+        const colRetirado = document.getElementById('col-retirado');
         
-        colPecas.innerHTML = ""; colPronta.innerHTML = ""; colPgto.innerHTML = "";
+        colPecas.innerHTML = ""; colPgto.innerHTML = ""; colRetirado.innerHTML = "";
 
         db.activeOS.forEach(os => {
             let card = `
                 <div class="os-card ${os.status}">
-                    <b>${os.cliente}</b><br>
-                    ${os.modelo}<br>
-                    <span style="color:#777">R$ ${os.valor.toFixed(2)}</span><br>
-                    <div style="margin-top:5px; display:flex; gap:5px">
-                        ${os.status === 'pecas' ? `<button class="btn-sm btn-primary" onclick="moverOS(${os.id}, 'pronta')">PRONTA</button>` : ''}
-                        ${os.status === 'pronta' ? `<button class="btn-sm btn-success" onclick="moverOS(${os.id}, 'pgto')">PAGAR</button>` : ''}
-                        ${os.status === 'pgto' ? `<button class="btn-sm btn-success" onclick="finalizarOS(${os.id})">RECEBER</button>` : ''}
-                        <button class="btn-sm" style="background:#ddd" onclick="zapOS('${os.cliente}','${os.modelo}')"><i class="fab fa-whatsapp"></i></button>
+                    <b>${os.cliente}</b>
+                    ${os.modelo}
+                    <br><span style="color:#777">R$ ${os.valor.toFixed(2)}</span>
+                    <div style="margin-top:5px; display:flex; gap:2px">
+                        ${os.status === 'pecas' ? `<button class="btn-sm btn-primary" style="flex:1" onclick="moverOS(${os.id}, 'pgto')">PRONTO</button>` : ''}
+                        ${os.status === 'pgto' ? `<button class="btn-sm btn-success" style="flex:1" onclick="moverOS(${os.id}, 'retirado')">SAÍDA</button>` : ''}
+                        ${os.status === 'retirado' ? `<button class="btn-sm btn-primary" style="flex:1; background:#444" onclick="finalizarOS(${os.id})">ARQUIVAR</button>` : ''}
+                        <button class="btn-sm" style="background:#ddd; width:25px" onclick="zapOS('${os.cliente}','${os.modelo}')"><i class="fab fa-whatsapp"></i></button>
                     </div>
-                </div>
-            `;
+                </div>`;
+            
             if(os.status === 'pecas') colPecas.innerHTML += card;
-            else if(os.status === 'pronta') colPronta.innerHTML += card;
             else if(os.status === 'pgto') colPgto.innerHTML += card;
+            else if(os.status === 'retirado') colRetirado.innerHTML += card;
         });
     }
 
@@ -385,21 +370,17 @@
             tipo: tipoVendaAtual === 'produto' ? 'VENDA' : 'SERVIÇO', 
             data: new Date().toISOString(),
             cliente: document.getElementById('v-cli').value,
-            desc: document.getElementById('v-item').value,
+            desc: document.getElementById('v-desc').value, // Pega do campo de descrição preenchido
             valor: parseFloat(document.getElementById('v-val').value)
         };
+        if(!item.desc || !item.valor) { alert("SELECIONE UM ITEM!"); return; }
         
-        if(!item.desc || !item.valor) { alert("PREENCHA OS DADOS!"); return; }
-
-        // Calcula Lucro
         if(tipoVendaAtual === 'produto') {
             let pIdx = db.produtos.findIndex(p => p.nome === item.desc);
             if(pIdx !== -1) { item.lucro = item.valor - (db.produtos[pIdx].precoCompra || 0); }
-            else { item.lucro = item.valor; } // Se não achou produto, lucro total
-        } else {
-            item.lucro = item.valor; // Serviço Venda Rápida
-        }
-
+            else { item.lucro = item.valor; }
+        } else { item.lucro = item.valor; }
+        
         db.logs.push(item);
         localStorage.setItem('filhao_v8', JSON.stringify(db));
         alert("VENDA CONCLUÍDA!");
@@ -413,39 +394,21 @@
         let logs = db.logs.filter(l => {
             const d = new Date(l.data);
             if(f === 'hoje') return d.toDateString() === h.toDateString();
-            if(f === 'semana') {
-                const start = new Date(h); start.setDate(h.getDate() - h.getDay());
-                return d >= start;
-            }
+            if(f === 'semana') { const start = new Date(h); start.setDate(h.getDate() - h.getDay()); return d >= start; }
             if(f === 'mes') return d.getMonth() === h.getMonth();
             if(f === 'ano') return d.getFullYear() === h.getFullYear();
             return true;
         });
-        
-        r.innerHTML = logs.reverse().map(l => `
-            <div style="padding:8px; background:#fff; margin-bottom:5px; border-radius:8px; border-left: 4px solid ${l.tipo === 'SERVIÇO' ? '#003399' : '#25d366'}">
-                <b>${l.tipo}:</b> ${l.cliente} - ${l.desc} <span style="float:right">R$ ${l.valor?l.valor.toFixed(2):'0.00'}</span>
-            </div>`).join('');
-
+        r.innerHTML = logs.reverse().map(l => `<div style="padding:8px; background:#fff; margin-bottom:5px; border-radius:8px; border-left: 4px solid ${l.tipo === 'SERVIÇO' ? '#003399' : '#25d366'}"><b>${l.tipo}:</b> ${l.cliente} - ${l.desc} <span style="float:right">R$ ${l.valor?l.valor.toFixed(2):'0.00'}</span></div>`).join('');
         const fat = logs.reduce((a, b) => a + (b.valor || 0), 0);
         const luc = logs.reduce((a, b) => a + (b.lucro || 0), 0);
         document.getElementById('fin-adm').innerHTML = `TOTAL: FAT R$ ${fat.toFixed(2)} | LUC R$ ${luc.toFixed(2)}`;
     }
 
-    function zap() {
-        const msg = `*FILHÃO.CELL*\nCLIENTE: ${document.getElementById('s-cli').value}\nAPARELHO: ${document.getElementById('s-apa').value}\nSENHA: ${document.getElementById('s-pw').value}`;
-        window.open(`https://wa.me/5581999999999?text=${encodeURIComponent(msg)}`);
-    }
-
-    function zapOS(cli, mod) {
-        window.open(`https://wa.me/5581999999999?text=Olá ${cli}, atualização sobre seu aparelho ${mod}.`);
-    }
-
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(e => {}); });
-    }
+    function zapOS(cli, mod) { window.open(`https://wa.me/5581999999999?text=Olá ${cli}, atualização sobre seu aparelho ${mod}.`); }
+    function zap() { window.open(`https://wa.me/5581999999999`); }
     
-    // Inicia Kanban ao carregar
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(e => {}); }); }
     renderKanban();
 </script>
 </body>
