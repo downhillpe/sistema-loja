@@ -12,7 +12,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const SENHA = "000800"; // Senha ADM
+const SENHA = "0800"; // NOVA SENHA ADM
 
 const EMPRESA = {
     nome: "FILHAO.CELL",
@@ -25,6 +25,7 @@ const EMPRESA = {
 
 window.db = { clientes:[], produtos:[], servicos:[], os:[], logs:[] };
 window.carrinho = [];
+window.carrinhoOS = []; // Novo carrinho da OS
 window.shareData = null;
 window.tempImg = null;
 window.retornoVenda = false;
@@ -78,26 +79,20 @@ window.forcarAtualizacao = async function() {
     window.location.reload(true);
 }
 
-// --- NOVA FUNÇÃO CENTRALIZADA DE TOGGLE (ABRIR/FECHAR BUSCA) ---
+// --- BUSCA TOGGLE ---
 window.toggleSearch = function(tipo, inpId, boxId) {
     const box = document.getElementById(boxId);
     const val = document.getElementById(inpId).value;
 
-    // Caso especial: Lista de Clientes (não é popup)
     if(tipo === 'listacli') {
-         if(box.innerHTML.trim() !== '') {
-             box.innerHTML = ''; // Recolher
-         } else {
-             buscar('clientes', val, boxId, true, true);
-         }
+         if(box.innerHTML.trim() !== '') { box.innerHTML = ''; } 
+         else { buscar('clientes', val, boxId, true, true); }
          return;
     }
 
-    // Popups (Sugestões)
     if(box.style.display === 'block') {
-        box.style.display = 'none'; // Recolher
+        box.style.display = 'none'; 
     } else {
-        // Forçar busca
         if(tipo === 'cli') buscar('clientes', val, boxId, false, true);
         if(tipo === 'venda') buscarVenda(val, true);
         if(tipo === 'os') buscarItemOS(val, true);
@@ -113,11 +108,8 @@ window.buscar = function(col, txt, divId, lista=false, force=false) {
     let res = window.db[col].filter(i => (i.nome||'').toUpperCase().includes((txt||'').toUpperCase())).slice(0,8);
     
     if(lista) {
-        if(res.length === 0) {
-            document.getElementById(divId).innerHTML = '<div style="text-align:center;padding:10px;color:#999">NENHUM REGISTRO</div>';
-        } else {
-            document.getElementById(divId).innerHTML = res.map(renderCliCard).join('');
-        }
+        if(res.length === 0) { document.getElementById(divId).innerHTML = '<div style="text-align:center;padding:10px;color:#999">NENHUM REGISTRO</div>'; } 
+        else { document.getElementById(divId).innerHTML = res.map(renderCliCard).join(''); }
         return;
     }
     
@@ -133,14 +125,12 @@ window.buscar = function(col, txt, divId, lista=false, force=false) {
 
 window.sel = function(c, id, div) {
     const item = window.db[c].find(i=>i.id===id);
-    
     if(div === 'sug-r-cli') {
         document.getElementById('r-search').value = item.nome;
         document.getElementById(div).style.display='none';
         renderRelatorio();
         return;
     }
-
     const inp = div.includes('v-') ? 'v-cli' : 's-cli';
     document.getElementById(inp).value = item.nome;
     document.getElementById(div).style.display='none';
@@ -188,9 +178,24 @@ window.renderCarrinho = function() {
     let t = 0;
     l.innerHTML = window.carrinho.map((i,x) => {
         t += i.val;
-        return `<div style="display:flex;justify-content:space-between;padding:5px;border-bottom:1px solid #eee"><span>${i.nome}</span><span>R$ ${i.val} <i class="fas fa-trash" style="color:red;cursor:pointer;margin-left:5px" onclick="delCar(${x})"></i></span></div>`;
+        return `<div style="display:flex;justify-content:space-between;padding:5px;border-bottom:1px solid #eee; align-items:center">
+            <span onclick="editItemVenda(${x})" style="flex:1; cursor:pointer">${i.nome}</span>
+            <span onclick="editItemVenda(${x})" style="cursor:pointer; display:flex; align-items:center; gap:5px; font-weight:bold; color:var(--primary)">
+                <i class="fas fa-pen" style="font-size:10px; color:#555"></i> R$ ${i.val.toFixed(2)}
+            </span>
+            <i class="fas fa-trash" style="color:red;cursor:pointer;margin-left:10px" onclick="delCar(${x})"></i>
+        </div>`;
     }).join('');
     document.getElementById('v-total').innerText = 'TOTAL: R$ ' + t.toFixed(2);
+}
+
+window.editItemVenda = function(index) {
+    const item = window.carrinho[index];
+    const novoVal = prompt(`Alterar valor de ${item.nome}:`, item.val);
+    if(novoVal !== null) {
+        const v = parseFloat(novoVal);
+        if(!isNaN(v)) { window.carrinho[index].val = v; renderCarrinho(); }
+    }
 }
 
 window.delCar = function(i) { window.carrinho.splice(i,1); renderCarrinho(); }
@@ -208,7 +213,7 @@ window.finalizarVenda = async function() {
     abrirModalShare();
 }
 
-// --- OS ---
+// --- OS (NOVA LÓGICA DE LISTA) ---
 
 window.addFotoOS = function(idx) {
     window.currentFotoIndex = idx;
@@ -241,11 +246,9 @@ function renderFotosOS() {
 
 window.buscarItemOS = function(txt, force=false) {
     const box = document.getElementById('sug-os-item');
-    
     if(!txt && !force) { box.style.display='none'; return; }
     
     const term = (txt||'').toUpperCase();
-    
     const prods = window.db.produtos.filter(i => (i.nome||'').toUpperCase().includes(term)).slice(0,5);
     const servs = window.db.servicos.filter(i => (i.nome||'').toUpperCase().includes(term)).slice(0,5);
     
@@ -259,39 +262,66 @@ window.buscarItemOS = function(txt, force=false) {
         html += servs.map(i => `<div class="item-sug" onclick="addItemOS('${i.nome}', ${i.precoVenda})">${i.nome} - R$ ${i.precoVenda}</div>`).join('');
     }
     
-    if(html) { 
-        box.innerHTML = html; 
-        box.style.display='block'; 
-    } else if (force) {
-        box.innerHTML = '<div class="item-sug" style="color:#999">NENHUM ITEM</div>';
-        box.style.display='block';
-        setTimeout(()=>box.style.display='none', 2000);
-    } else { 
-        box.style.display='none'; 
-    }
+    if(html) { box.innerHTML = html; box.style.display='block'; } 
+    else if (force) { box.innerHTML = '<div class="item-sug" style="color:#999">NENHUM ITEM</div>'; box.style.display='block'; setTimeout(()=>box.style.display='none', 2000); } 
+    else { box.style.display='none'; }
 }
 
+// ADICIONA NA LISTA
 window.addItemOS = function(nome, val) {
-    let atual = parseFloat(document.getElementById('s-valor').value || 0);
-    document.getElementById('s-valor').value = (atual + val).toFixed(2);
-    
-    let desc = document.getElementById('s-def').value;
-    document.getElementById('s-def').value = desc ? desc + " + " + nome : nome;
-    
+    window.carrinhoOS.push({nome, val});
+    renderItemsOS();
     document.getElementById('s-busca-item').value = '';
     document.getElementById('sug-os-item').style.display='none';
 }
 
+// RENDERIZA LISTA DA OS
+window.renderItemsOS = function() {
+    const l = document.getElementById('os-lista-itens');
+    if(!window.carrinhoOS.length) { 
+        l.innerHTML = '<div style="text-align:center;color:#ccc;font-size:10px">NENHUM ITEM</div>'; 
+        document.getElementById('s-total-display').innerText='TOTAL: R$ 0,00';
+        return; 
+    }
+    
+    let t = 0;
+    l.innerHTML = window.carrinhoOS.map((i,x) => {
+        t += i.val;
+        return `<div style="display:flex;justify-content:space-between;padding:5px;border-bottom:1px solid #eee;align-items:center;font-size:12px">
+            <span onclick="editItemOS(${x})" style="flex:1;cursor:pointer">${i.nome}</span>
+            <span onclick="editItemOS(${x})" style="cursor:pointer; display:flex; align-items:center; gap:5px; font-weight:bold; color:var(--primary)">
+                <i class="fas fa-pen" style="font-size:10px; color:#555"></i> R$ ${i.val.toFixed(2)}
+            </span>
+            <i class="fas fa-trash" style="color:red;cursor:pointer;margin-left:8px" onclick="delItemOS(${x})"></i>
+        </div>`;
+    }).join('');
+    
+    document.getElementById('s-total-display').innerText = 'TOTAL: R$ ' + t.toFixed(2);
+}
+
+window.editItemOS = function(index) {
+    const item = window.carrinhoOS[index];
+    const novoVal = prompt(`Alterar valor de ${item.nome}:`, item.val);
+    if(novoVal !== null) {
+        const v = parseFloat(novoVal);
+        if(!isNaN(v)) { window.carrinhoOS[index].val = v; renderItemsOS(); }
+    }
+}
+window.delItemOS = function(i) { window.carrinhoOS.splice(i,1); renderItemsOS(); }
+
 window.salvarOS = async function() {
     const id = document.getElementById('os-id').value;
     const statusOrig = document.getElementById('os-status-orig').value;
+    
+    const total = window.carrinhoOS.reduce((a,b)=>a+b.val,0);
     
     const os = {
         cliente: document.getElementById('s-cli').value,
         modelo: document.getElementById('s-mod').value,
         defeito: document.getElementById('s-def').value,
         senha: document.getElementById('s-senha').value,
-        valor: parseFloat(document.getElementById('s-valor').value||0),
+        valor: total,
+        itens: window.carrinhoOS, // Salva o array de itens
         fotos: window.osFotos,
         status: statusOrig || 'pecas',
         data: new Date().toISOString()
@@ -307,8 +337,6 @@ window.renderKanban = function() {
 
     window.db.os.forEach(o => {
         const currentIdx = flow.indexOf(o.status);
-        
-        // Botões de Navegação (AGRUPADOS ESQUERDA)
         let navBtns = '';
         if(currentIdx > 0) navBtns += `<button class="btn-mini btn-dark" onclick="moveOS('${o.id}', -1)"><i class="fas fa-arrow-left"></i></button>`;
         if(currentIdx < 2) navBtns += `<button class="btn-mini btn-dark" onclick="moveOS('${o.id}', 1)"><i class="fas fa-arrow-right"></i></button>`;
@@ -318,17 +346,14 @@ window.renderKanban = function() {
         <div class="os-card ${o.status}">
             <b>${o.cliente}</b>
             <div>${o.modelo}</div>
-            <div style="font-weight:bold; color:var(--primary)">R$ ${o.valor}</div>
-            
+            <div style="font-weight:bold; color:var(--primary)">R$ ${o.valor.toFixed(2)}</div>
             <div style="display:flex; justify-content:space-between; margin-top:5px">
-               <div style="display:flex; gap:5px">
-                  ${navBtns}
-               </div>
-               <div style="display:flex; gap:5px">
-                  <button class="btn-mini btn-info" onclick="editOS('${o.id}')"><i class="fas fa-pen"></i></button>
-                  <button class="btn-mini btn-success" onclick="shareOS('${o.id}')"><i class="fas fa-share-alt"></i></button>
-                  <button class="btn-mini btn-dark" style="background:#c62828" onclick="delOS('${o.id}')"><i class="fas fa-trash"></i></button>
-               </div>
+                   <div style="display:flex; gap:5px">${navBtns}</div>
+                   <div style="display:flex; gap:5px">
+                      <button class="btn-mini btn-info" onclick="editOS('${o.id}')"><i class="fas fa-pen"></i></button>
+                      <button class="btn-mini btn-success" onclick="shareOS('${o.id}')"><i class="fas fa-share-alt"></i></button>
+                      <button class="btn-mini btn-dark" style="background:#c62828" onclick="delOS('${o.id}')"><i class="fas fa-trash"></i></button>
+                   </div>
             </div>
         </div>`;
     });
@@ -347,8 +372,7 @@ window.delOS = async function(id) {
 window.moveOS = async function(id, dir) {
     const flow = ['pecas', 'pgto', 'retirado'];
     const o = window.db.os.find(i=>i.id===id);
-    const currentIdx = flow.indexOf(o.status);
-    const nextIdx = currentIdx + dir;
+    const nextIdx = flow.indexOf(o.status) + dir;
     if(nextIdx >= 0 && nextIdx < flow.length) {
         await updateDoc(doc(db,"os_ativa",id), {status: flow[nextIdx]});
     }
@@ -366,16 +390,22 @@ window.editOS = function(id) {
     document.getElementById('os-id').value=id; 
     document.getElementById('s-cli').value=o.cliente;
     document.getElementById('s-mod').value=o.modelo; 
-    document.getElementById('s-valor').value=o.valor;
     document.getElementById('os-status-orig').value = o.status;
     
     let def = o.defeito;
     let sen = o.senha || '';
-    if(!sen && def && def.includes(' | S: ')) {
-        const parts = def.split(' | S: '); def = parts[0]; sen = parts[1];
-    }
+    if(!sen && def && def.includes(' | S: ')) { const p = def.split(' | S: '); def = p[0]; sen = p[1]; }
     document.getElementById('s-def').value=def;
     document.getElementById('s-senha').value=sen;
+    
+    // Carrega Itens ou Cria item generico se for OS antiga
+    if(o.itens && Array.isArray(o.itens)) {
+        window.carrinhoOS = o.itens;
+    } else {
+        window.carrinhoOS = o.valor > 0 ? [{nome: 'Serviço/Peça (Antigo)', val: o.valor}] : [];
+    }
+    renderItemsOS();
+
     window.osFotos = o.fotos || [null, null, null, null];
     renderFotosOS();
 }
@@ -384,14 +414,14 @@ window.shareOS = function(id) {
     const o = window.db.os.find(i=>i.id===id);
     let obsTexto = o.defeito;
     let senhaTexto = o.senha || '';
-    if(!senhaTexto && obsTexto && obsTexto.includes(' | S: ')) {
-         const p = obsTexto.split(' | S: '); obsTexto = p[0]; senhaTexto = p[1];
-    }
+    if(!senhaTexto && obsTexto && obsTexto.includes(' | S: ')) { const p = obsTexto.split(' | S: '); obsTexto = p[0]; senhaTexto = p[1]; }
+
+    const itensList = (o.itens && o.itens.length) ? o.itens : [{nome:o.modelo, val:o.valor}];
 
     window.shareData={
         tipo:'OS', 
         cliente:o.cliente, 
-        itens:[{nome:o.modelo, val:o.valor}], 
+        itens: itensList, 
         total:o.valor,
         obs: obsTexto,
         senha: senhaTexto,
@@ -456,11 +486,23 @@ window.listarEstoque = function(t) {
 window.edtProd = function(col, id) {
     const i = (col=='produtos'?window.db.produtos:window.db.servicos).find(x=>x.id===id);
     document.getElementById('p-id').value=id; document.getElementById('p-nome').value=i.nome; document.getElementById('p-venda').value=i.precoVenda; document.getElementById('p-qtd').value=i.qtd||''; document.getElementById('p-custo').value=i.custo||'';
+    
+    // LOGICA DO CUSTO: Se for edição, esconde como senha
+    const inputCusto = document.getElementById('p-custo');
+    inputCusto.type = 'password'; 
+    document.getElementById('btn-ver-custo').style.display = 'block';
+
     window.tempImg=i.foto; 
     const view = document.getElementById('p-foto-view');
     view.src=i.foto||'';
     if(i.foto) view.classList.add('has-img'); else view.classList.remove('has-img');
     document.getElementById('page-estoque').querySelector('.card').scrollIntoView();
+}
+window.revelarCusto = function() {
+    if(prompt("SENHA ADM:") === SENHA) {
+        document.getElementById('p-custo').type = 'number';
+        document.getElementById('btn-ver-custo').style.display = 'none';
+    }
 }
 
 // --- RELATÓRIOS ---
@@ -549,6 +591,10 @@ window.fecharModal = function(e) { if(e.target.id=='modal-overlay') document.get
 // --- IMPRESSÃO COM FOTOS ---
 window.acaoShare = function(tipo) {
     const d = window.shareData;
+    
+    // FECHAR O MODAL IMEDIATAMENTE (CORREÇÃO PEDIDA)
+    document.getElementById('modal-overlay').style.display='none';
+
     let txt = `*${EMPRESA.nome} - ${d.tipo}*\nCLI: ${d.cliente||'Consumidor'}\n----------------\n` + d.itens.map(i=>`${i.nome} R$ ${i.val}`).join('\n');
     
     if(d.obs) txt += `\nOBS: ${d.obs}`;
@@ -612,7 +658,6 @@ window.acaoShare = function(tipo) {
         document.getElementById('area-print').innerHTML = htmlPrint;
         window.print();
     }
-    document.getElementById('modal-overlay').style.display='none';
 }
 
 // --- UTIL ---
@@ -620,28 +665,21 @@ window.limparOS = function() {
     document.querySelectorAll('#page-servicos input').forEach(i=>i.value=''); 
     document.getElementById('os-id').value=''; 
     window.osFotos = [null, null, null, null];
+    window.carrinhoOS = []; // Limpa lista
+    renderItemsOS();
     renderFotosOS();
 }
-window.limparCli = function() { document.querySelectorAll('#page-clientes input').forEach(i=>i.value=''); window.tempImg=null; 
-    const v = document.getElementById('c-foto-view'); v.src=''; v.classList.remove('has-img'); document.getElementById('c-id').value=''; }
-window.limparEstoque = function() { document.querySelectorAll('#page-estoque input').forEach(i=>i.value=''); window.tempImg=null; 
-    const v = document.getElementById('p-foto-view'); v.src=''; v.classList.remove('has-img'); document.getElementById('box-custo').style.display='none'; document.getElementById('p-id').value=''; }
+window.limparCli = function() { document.querySelectorAll('#page-clientes input').forEach(i=>i.value=''); window.tempImg=null; const v = document.getElementById('c-foto-view'); v.src=''; v.classList.remove('has-img'); document.getElementById('c-id').value=''; }
+window.limparEstoque = function() { 
+    document.querySelectorAll('#page-estoque input').forEach(i=>i.value=''); window.tempImg=null; 
+    const v = document.getElementById('p-foto-view'); v.src=''; v.classList.remove('has-img'); document.getElementById('p-id').value='';
+    // Reseta custo para visivel
+    document.getElementById('p-custo').type='number'; 
+    document.getElementById('btn-ver-custo').style.display='none';
+}
 window.maskTel = function(v){ v.value=v.value.replace(/\D/g,"").replace(/^(\d{2})(\d)/g,"($1) $2").replace(/(\d)(\d{4})$/,"$1-$2"); }
 window.lerFoto = function(inp, vId) { 
     if(inp.files && inp.files[0]) { 
-        const r = new FileReader(); 
-        r.onload = e => { 
-            const i = new Image(); i.src=e.target.result; 
-            i.onload = () => { 
-                const c = document.createElement('canvas'); const x = c.getContext('2d'); 
-                let w=i.width, h=i.height; if(w>h){if(w>300){h*=300/w;w=300}}else{if(h>300){w*=300/h;h=300}}; 
-                c.width=w; c.height=h; x.drawImage(i,0,0,w,h); 
-                window.tempImg = c.toDataURL('image/jpeg',0.6); 
-                const view = document.getElementById(vId);
-                view.src=window.tempImg; 
-                view.classList.add('has-img');
-            } 
-        }; 
-        r.readAsDataURL(inp.files[0]); 
+        const r = new FileReader(); r.onload = e => { const i = new Image(); i.src=e.target.result; i.onload = () => { const c = document.createElement('canvas'); const x = c.getContext('2d'); let w=i.width, h=i.height; if(w>h){if(w>300){h*=300/w;w=300}}else{if(h>300){w*=300/h;h=300}}; c.width=w; c.height=h; x.drawImage(i,0,0,w,h); window.tempImg = c.toDataURL('image/jpeg',0.6); const view = document.getElementById(vId); view.src=window.tempImg; view.classList.add('has-img'); } }; r.readAsDataURL(inp.files[0]); 
     } 
 }
