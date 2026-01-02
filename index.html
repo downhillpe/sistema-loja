@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FILHÃO.CELL (v43)</title>
+    <title>FILHÃO.CELL (v44)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <link rel="manifest" href="manifest.json">
@@ -29,7 +29,7 @@
 </div>
 
 <header>
-    <h2><i class="fas fa-fire"></i> FILHAO.CELL <div class="version-btn" onclick="forcarAtualizacao()">v43 <i class="fas fa-sync-alt"></i></div></h2>
+    <h2><i class="fas fa-fire"></i> FILHAO.CELL <div class="version-btn" onclick="forcarAtualizacao()">v44 <i class="fas fa-sync-alt"></i></div></h2>
     <div id="status-conn" style="font-size:10px"><i class="fas fa-wifi"></i></div>
 </header>
 
@@ -57,7 +57,13 @@
             <div style="background:#f9f9f9; border:2px dashed #e0e0e0; padding:15px; margin-top:20px; border-radius:12px">
                 <div style="font-size:10px; color:#999; text-align:center; margin-bottom:5px">CLIQUE NO LÁPIS PARA ALTERAR O VALOR</div>
                 <div id="carrinho-lista" style="font-size:12px; color:#888; text-align:center; padding:10px">CARRINHO VAZIO</div>
-                <div style="text-align:right; font-size:18px; font-weight:900; margin-top:15px; color:var(--primary); border-top:1px solid #ddd; padding-top:10px" id="v-total">TOTAL: R$ 0,00</div>
+                
+                <div style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:15px; padding-top:10px; border-top:1px solid #ddd">
+                    <label style="margin:0; font-size:11px; color:#d32f2f">DESCONTO (R$):</label>
+                    <input type="number" id="v-desc" placeholder="0.00" style="width:100px; margin:0; border-color:#d32f2f; color:#d32f2f; font-weight:bold" onkeyup="renderCarrinho()">
+                </div>
+
+                <div style="text-align:right; font-size:18px; font-weight:900; margin-top:10px; color:var(--primary);" id="v-total">TOTAL: R$ 0,00</div>
             </div>
 
             <div style="display:flex; gap:10px">
@@ -110,7 +116,13 @@
             <div style="background:#f9f9f9; border:2px dashed #e0e0e0; padding:10px; margin-top:15px; border-radius:12px">
                 <div style="font-size:10px; color:#999; text-align:center; margin-bottom:5px">CLIQUE NO LÁPIS PARA ALTERAR O VALOR</div>
                 <div id="os-lista-itens"></div>
-                <div style="text-align:right; font-size:16px; font-weight:900; margin-top:10px; color:var(--primary); padding-top:5px; border-top:1px solid #ddd" id="s-total-display">TOTAL: R$ 0,00</div>
+                
+                <div style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:15px; padding-top:10px; border-top:1px solid #ddd">
+                    <label style="margin:0; font-size:11px; color:#d32f2f">DESCONTO (R$):</label>
+                    <input type="number" id="s-desc" placeholder="0.00" style="width:100px; margin:0; border-color:#d32f2f; color:#d32f2f; font-weight:bold" onkeyup="renderItemsOS()">
+                </div>
+
+                <div style="text-align:right; font-size:16px; font-weight:900; margin-top:10px; color:var(--primary);" id="s-total-display">TOTAL: R$ 0,00</div>
             </div>
 
             <button class="btn btn-primary" onclick="salvarOS()">SALVAR ORDEM</button>
@@ -207,11 +219,11 @@
             </select>
             
             <div style="background:var(--accent); color:white; padding:20px; border-radius:12px; text-align:center">
-                <div style="font-size:11px; opacity:0.8">FATURAMENTO TOTAL</div>
+                <div style="font-size:11px; opacity:0.8">FATURAMENTO TOTAL (LÍQUIDO)</div>
                 <div id="r-total" style="font-size:24px; font-weight:900; margin-top:5px">R$ 0,00</div>
             </div>
 
-            <h3 style="margin-top:25px; font-size:12px; color:#666">HISTÓRICO DETALHADO</h3>
+            <h3 style="margin-top:25px; font-size:12px; color:#666">HISTÓRICO (CLIQUE NO NOME PARA FILTRAR)</h3>
             
             <div class="search-box" style="margin-bottom:10px">
                 <input type="text" id="r-search" placeholder="BUSCAR NO HISTÓRICO..." onkeyup="buscar('clientes', this.value, 'sug-r-cli'); renderRelatorio()">
