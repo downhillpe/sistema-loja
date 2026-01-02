@@ -620,26 +620,3 @@ window.acaoShare = function(tipo) {
         window.print();
     }
 }
-
-// --- UTIL ---
-window.limparOS = function() { 
-    document.querySelectorAll('#page-servicos input').forEach(i=>i.value=''); 
-    document.getElementById('os-id').value=''; 
-    window.osFotos = [null, null, null, null];
-    window.carrinhoOS = []; 
-    renderItemsOS();
-    renderFotosOS();
-}
-window.limparCli = function() { document.querySelectorAll('#page-clientes input').forEach(i=>i.value=''); window.tempImg=null; const v = document.getElementById('c-foto-view'); v.src=''; v.classList.remove('has-img'); document.getElementById('c-id').value=''; }
-window.limparEstoque = function() { 
-    document.querySelectorAll('#page-estoque input').forEach(i=>i.value=''); window.tempImg=null; 
-    const v = document.getElementById('p-foto-view'); v.src=''; v.classList.remove('has-img'); document.getElementById('p-id').value='';
-    document.getElementById('p-custo').type='number'; 
-    document.getElementById('btn-ver-custo').style.display='none';
-}
-window.maskTel = function(v){ v.value=v.value.replace(/\D/g,"").replace(/^(\d{2})(\d)/g,"($1) $2").replace(/(\d)(\d{4})$/,"$1-$2"); }
-window.lerFoto = function(inp, vId) { 
-    if(inp.files && inp.files[0]) { 
-        const r = new FileReader(); r.onload = e => { const i = new Image(); i.src=e.target.result; i.onload = () => { const c = document.createElement('canvas'); const x = c.getContext('2d'); let w=i.width, h=i.height; if(w>h){if(w>300){h*=300/w;w=300}}else{if(h>300){w*=300/h;h=300}}; c.width=w; c.height=h; x.drawImage(i,0,0,w,h); window.tempImg = c.toDataURL('image/jpeg',0.6); const view = document.getElementById(vId); view.src=window.tempImg; view.classList.add('has-img'); } }; r.readAsDataURL(inp.files[0]); 
-    } 
-}
