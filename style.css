@@ -105,24 +105,6 @@ input:focus { border-color: var(--primary); background: #fff; }
 .btn-mini { border: none; border-radius: 6px; padding: 4px; color: white; cursor: pointer; font-size: 9px; flex: 1; transition: 0.2s; display:flex; justify-content:center; align-items:center; }
 .btn-mini:active { transform: scale(0.9); }
 
-/* BOTÕES GERAIS */
-.btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; font-size: 13px; color: white; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-.btn-primary { background: var(--primary); } 
-.btn-dark { background: var(--accent); } 
-.btn-info { background: #0288d1; }
-.btn-success { background: var(--success); }
-.btn-zap { background: #25D366; }
-.btn-add-mini { background: #2e7d32; color:white; border:none; border-radius:8px; width:44px; font-size:18px; cursor:pointer; margin-top:5px; }
-
-/* BOTÃO CHECK DESCONTO */
-.btn-check { 
-    background: #2e7d32; color: white; 
-    border: none; border-radius: 0 8px 8px 0; 
-    width: 35px; height: 45px; 
-    cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 5px;
-}
-.btn-check:active { background: #1b5e20; }
-
 /* FOTOS E MODAL */
 .foto-preview { 
     width: 80px; height: 80px; border-radius: 50%; 
@@ -149,12 +131,15 @@ nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; displ
 .nav-item i { display: block; font-size: 22px; margin-bottom: 4px; color: var(--accent); }
 .nav-item.active i { color: var(--primary); }
 
-/* IMPRESSÃO (TÉRMICA 80MM) */
+/* ÁREA DE IMPRESSÃO - SEGREDO PARA NÃO BUGAR A TELA */
+#area-print { display: none; }
+
 @media print { 
     body * { visibility: hidden; } 
-    #area-print, #area-print * { visibility: visible; }
+    #area-print { display: block; position: absolute; left: 0; top: 0; width: 100%; min-height: 100vh; }
+    #area-print * { visibility: visible; }
+    
     #area-print { 
-        position: absolute; left: 0; top: 0; width: 100%; 
         font-family: 'Courier New', monospace; font-size: 12px; color: black; background: white;
         padding: 5px;
     } 
