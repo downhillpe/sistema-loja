@@ -1,4 +1,4 @@
-const CACHE_NAME = 'filhaocell-v45';
+const CACHE_NAME = 'filhaocell-v47';
 const ASSETS = [
   './',
   './index.html',
