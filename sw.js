@@ -1,22 +1,49 @@
-const CACHE_NAME = 'filhaocell-v48';
+const CACHE_NAME = 'filhao-cell-v59'; // Mudei para v59 para forçar atualização
 const ASSETS = [
   './',
   './index.html',
-  './style.css',
-  './script.js',
-  './manifest.json'
+  './manifest.json',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
 
-self.addEventListener('install', (e) => {
-  self.skipWaiting();
-  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+// Instalação: Cache inicial
+self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Força o SW a ativar imediatamente
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS);
+    })
+  );
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((keyList) => Promise.all(keyList.map((key) => { if (key !== CACHE_NAME) return caches.delete(key); }))));
-  self.clients.claim();
+// Ativação: Limpa caches antigos (v58, v57, etc)
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keyList) => {
+      return Promise.all(
+        keyList.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim(); // Assume o controle da página imediatamente
 });
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(caches.match(e.request).then((response) => response || fetch(e.request)));
+// Interceptação de Rede (Network First)
+// Tenta buscar na internet primeiro. Se der erro (offline), busca no cache.
+self.addEventListener('fetch', (event) => {
+  // Ignora requisições do Firebase/Firestore para não dar erro de CORS/Auth
+  if (event.request.url.includes('firestore') || event.request.url.includes('googleapis')) {
+    return; 
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .catch(() => {
+        return caches.match(event.request);
+      })
+  );
 });
